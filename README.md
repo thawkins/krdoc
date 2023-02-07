@@ -1,3 +1,3 @@
 # krdoc
 
-A tool for dicumenting kubernetes clusters. 
+A tool for documenting kubernetes clusters. 
