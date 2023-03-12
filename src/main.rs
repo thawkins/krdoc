@@ -4,20 +4,24 @@ use clap::Parser;
 #[derive(Parser, Debug)]
 #[command(author="Tim Hawkins", version="0.1.0", about="program to document kubernetes clusters", long_about = None)]
 struct Args {
-    /// Name of the person to greet
-    #[arg(short, long, default_value ="default")]
+    /// kubectl context to document
+    #[arg(short, long, default_value ="")]
     context: String,
-    /// Name of the person to greet
+    /// kubenetes namespace to document
+    #[arg(short, long, default_value ="default")]
+    namespace: String,
+    /// List of documentation types to produce
     #[arg(short, long, default_value ="all")]
     output: String,
-    /// Number of times to greet
-    #[arg(short, long, default_value_t = true)]
+    /// Wether to include all namespaces
+    #[arg(short, long, default_value_t =false)]
     all_namespaces: bool,
 }
 
 fn main() {
     let args = Args::parse();
-    println!("context {}!", args.context);
-    println!("output {}!", args.output);
-    println!("all_namespaces {}!", args.all_namespaces);
+    println!("context {}", args.context);
+    println!("namespacet {}", args.output);
+    println!("output {}", args.output);
+    println!("all_namespaces {}", args.all_namespaces);
 }
