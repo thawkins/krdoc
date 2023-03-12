@@ -1,19 +1,27 @@
-extern crate clap;
 use clap::Parser;
-#[derive(Parser, Default, Debug)]
-#[clap(author="Tim Hawkins. <tim.thawkins@gmail.com>", version="0.0.1", about)]
-/// A tool for documenting kubernetes clusters
-struct Arguments {
-    /// Select which documentation to create, generate all if not present
-    generate: Option<String>,
-    /// Select kubectl context to document, use "default" if not present
-    context: Option<String>,
-    /// filter namespace (regex), no filter if not present
-    filter: Option<String>
+
+/// Simple program to greet a person
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Name of the person to greet
+    #[arg(short, long, default_value ="default")]
+    context: String,
+
+    /// Name of the person to greet
+    #[arg(short, long, default_value ="all")]
+    output: String,
+
+    /// Number of times to greet
+    #[arg(short, long, default_value_t = true)]
+    all_namespaces: bool,
 }
 
-fn main() {      
-    let args = Arguments::parse();
-    
-    println!("{:?}", args);
+fn main() {
+    let args = Args::parse();
+    println!("context {}!", args.context);
+    println!("output {}!", args.output);
+    println!("all_namespaces {}!", args.all_namespaces);
+
+
 }
