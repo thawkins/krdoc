@@ -1,5 +1,5 @@
 use clap::Parser;
-use k8s_openapi::api::core::v1::Pod;
+use k8s_openapi::api::core::v1::{Pod,Node,Service};
 use std::{sync::Arc, time::Duration};
 use futures::StreamExt;
 use kube::{
@@ -29,14 +29,35 @@ struct Args {
 pub enum Error {}
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
-fn error_policy(_object: Arc<Pod>, _err: &Error, _ctx: Arc<()>) -> Action {
+fn error_policy_pod(_object: Arc<Pod>, _err: &Error, _ctx: Arc<()>) -> Action {
     Action::requeue(Duration::from_secs(5))
 }
 
-async fn reconcile(obj: Arc<Pod>, ctx: Arc<()>) -> Result<Action> {
-    println!("reconcile request: {}", obj.name_any());
+async fn reconcile_pod(obj: Arc<Pod>, ctx: Arc<()>) -> Result<Action> {
+    println!("Pod: {}", obj.name_any());
     Ok(Action::requeue(Duration::from_secs(3600)))
 }
+
+
+fn error_policy_node(_object: Arc<Node>, _err: &Error, _ctx: Arc<()>) -> Action {
+    Action::requeue(Duration::from_secs(5))
+}
+
+async fn reconcile_node(obj: Arc<Node>, ctx: Arc<()>) -> Result<Action> {
+    println!("Node: {}", obj.name_any());
+    Ok(Action::requeue(Duration::from_secs(3600)))
+}
+
+fn error_policy_service(_object: Arc<Service>, _err: &Error, _ctx: Arc<()>) -> Action {
+    Action::requeue(Duration::from_secs(5))
+}
+
+async fn reconcile_service(obj: Arc<Service>, ctx: Arc<()>) -> Result<Action> {
+    println!("Service: {}", obj.name_any());
+    Ok(Action::requeue(Duration::from_secs(3600)))
+}
+
+
 
 #[tokio::main]
 async fn main() -> Result<(), kube::Error>  {
@@ -46,17 +67,26 @@ async fn main() -> Result<(), kube::Error>  {
     println!("output {}", args.output);
     println!("all_namespaces {}", args.all_namespaces);
 
-    let client = Client::try_default().await?;
-    let pods = Api::<Pod>::all(client);
+    let pods = Api::<Pod>::all(Client::try_default().await?);
+    let nodes = Api::<Node>::all(Client::try_default().await?);
+    let services = Api::<Service>::all(Client::try_default().await?);
 
     Controller::new(pods.clone(), Default::default())
-        .run(reconcile, error_policy, Arc::new(()))
+        .run(reconcile_pod, error_policy_pod, Arc::new(()))
         .for_each(|_| futures::future::ready(()))
         .await;
 
+    Controller::new(nodes.clone(), Default::default())
+        .run(reconcile_node, error_policy_node, Arc::new(()))
+        .for_each(|_| futures::future::ready(()))
+        .await;
+
+    Controller::new(services.clone(), Default::default())
+        .run(reconcile_service, error_policy_service, Arc::new(()))
+        .for_each(|_| futures::future::ready(()))
+        .await;
+
+
     Ok(())
-
-
-
 
 }
